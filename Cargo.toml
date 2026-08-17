@@ -1,0 +1,7 @@
+[package]
+name = "readme-stats"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+typst-svg = "0.15.1"

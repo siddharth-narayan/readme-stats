@@ -1,12 +1,6 @@
-use std::io::{Error, ErrorKind};
-
+use axum::{Router, routing::get};
 use typst::{
-    Library, LibraryExt,
-    diag::FileResult,
-    foundations::{Bytes, Datetime, Duration},
-    syntax::{FileId, RootedPath, Source, VirtualPath, VirtualRoot},
-    text::{Font, FontBook},
-    utils::LazyHash,
+    Library, LibraryExt, diag::FileResult, foundations::{Bytes, Datetime, Dict, Duration, Str}, syntax::{FileId, RootedPath, Source, VirtualPath, VirtualRoot}, text::{Font, FontBook}, utils::LazyHash,
 };
 use typst_kit::{
     datetime::Time, downloader::SystemDownloader, files::{FileStore, FsRoot, SystemFiles}, fonts::{self, FontStore}, packages::SystemPackages,
@@ -14,7 +8,13 @@ use typst_kit::{
 use typst_layout::PagedDocument;
 use typst_svg::SvgOptions;
 
-fn main() {
+#[tokio::main]
+async fn main() {
+    let app = Router::new().route("/", get(handle_req));
+    
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+
     let world = World::new();
 
     let result = typst::compile(&world);
@@ -28,6 +28,10 @@ fn main() {
         },
     );
     println!("{}", out)
+}
+
+async fn handle_req() -> String {
+    "Hello".into()
 }
 
 pub struct World {
@@ -51,8 +55,13 @@ impl World {
         fonts.extend(fonts::system());
         fonts.extend(fonts::embedded());
 
+        let mut inputs = Dict::new();
+        inputs.insert(Str::from("repo-name"), typst::foundations::Value::Str(Str::from("readme-stats")));
+        inputs.insert(Str::from("repo-desc"), typst::foundations::Value::Str(Str::from("A GitHub card generator")));
+        inputs.insert(Str::from("repo-lang"), typst::foundations::Value::Str(Str::from("Rust")));
+
         World {
-            lib: Library::builder().build().into(),
+            lib: Library::builder().with_inputs(inputs).build().into(),
             fonts,
             main,
             file_store,

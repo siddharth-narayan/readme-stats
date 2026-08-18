@@ -9,9 +9,7 @@ use typst::{
     utils::LazyHash,
 };
 use typst_kit::{
-    files::{FileStore, FsRoot, SystemFiles},
-    fonts::FontStore,
-    packages::SystemPackages,
+    datetime::Time, downloader::SystemDownloader, files::{FileStore, FsRoot, SystemFiles}, fonts::{self, FontStore}, packages::SystemPackages,
 };
 use typst_layout::PagedDocument;
 use typst_svg::SvgOptions;
@@ -43,15 +41,15 @@ impl World {
     pub fn new() -> World {
         let file_store = FileStore::new(SystemFiles::new(
             FsRoot::new(".".into()),
-            SystemPackages::new(Downloader),
+            SystemPackages::new(SystemDownloader::new("")),
         ));
 
         let main_path = VirtualPath::new("test.typ").unwrap();
         let main = FileId::new(RootedPath::new(VirtualRoot::Project, main_path));
 
         let mut fonts = FontStore::new();
-        fonts.extend(typst_kit::fonts::system());
-        fonts.extend(typst_kit::fonts::embedded());
+        fonts.extend(fonts::system());
+        fonts.extend(fonts::embedded());
 
         World {
             lib: Library::builder().build().into(),
@@ -79,26 +77,15 @@ impl typst::World for World {
         self.file_store.source(id)
     }
 
-    fn file(&self, _: FileId) -> FileResult<Bytes> {
-        todo!()
+    fn file(&self, id: FileId) -> FileResult<Bytes> {
+        self.file_store.file(id)
     }
 
     fn font(&self, index: usize) -> Option<Font> {
         self.fonts.font(index)
     }
 
-    fn today(&self, _offset: Option<Duration>) -> Option<Datetime> {
-        Datetime::from_ymd(1970, 1, 1)
-    }
-}
-
-struct Downloader;
-impl typst_kit::downloader::Downloader for Downloader {
-    fn stream(
-        &self,
-        _key: &dyn std::any::Any,
-        _url: &str,
-    ) -> std::io::Result<(Option<usize>, Box<dyn std::io::prelude::Read>)> {
-        std::io::Result::Err(Error::from(ErrorKind::AddrInUse))
+    fn today(&self, offset: Option<Duration>) -> Option<Datetime> {
+        Time::system().today(offset)
     }
 }

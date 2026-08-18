@@ -51,6 +51,7 @@ impl World {
 
         let mut fonts = FontStore::new();
         fonts.extend(typst_kit::fonts::system());
+        fonts.extend(typst_kit::fonts::embedded());
 
         World {
             lib: Library::builder().build().into(),
@@ -78,7 +79,7 @@ impl typst::World for World {
         self.file_store.source(id)
     }
 
-    fn file(&self, id: FileId) -> FileResult<Bytes> {
+    fn file(&self, _: FileId) -> FileResult<Bytes> {
         todo!()
     }
 
@@ -86,7 +87,7 @@ impl typst::World for World {
         self.fonts.font(index)
     }
 
-    fn today(&self, offset: Option<Duration>) -> Option<Datetime> {
+    fn today(&self, _offset: Option<Duration>) -> Option<Datetime> {
         Datetime::from_ymd(1970, 1, 1)
     }
 }
@@ -95,8 +96,8 @@ struct Downloader;
 impl typst_kit::downloader::Downloader for Downloader {
     fn stream(
         &self,
-        key: &dyn std::any::Any,
-        url: &str,
+        _key: &dyn std::any::Any,
+        _url: &str,
     ) -> std::io::Result<(Option<usize>, Box<dyn std::io::prelude::Read>)> {
         std::io::Result::Err(Error::from(ErrorKind::AddrInUse))
     }

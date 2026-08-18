@@ -1564,6 +1564,7 @@ name = "readme-stats"
 version = "0.1.0"
 dependencies = [
  "typst",
+ "typst-assets",
  "typst-kit",
  "typst-svg",
 ]

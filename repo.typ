@@ -5,27 +5,27 @@
 
 #block(width: 100%, inset: 20pt, fill: theme.background, stroke: theme.border + 1pt, radius: 5pt)[
   // Title
-  #stack(dir: ltr, spacing: 7.5pt,
+  #stack(dir: ltr, spacing: 5pt,
     book-icon,
-    align(horizon, text(strong(sys.inputs.repo-name), size: 14pt))
+    align(horizon, text(strong(sys.inputs.repo-name), size: 12pt))
   )
 
-  #set text(fill: theme.text-unemph)
+  #set text(fill: theme.text-unemph, size: 10pt)
 
   // Description
   #sys.inputs.repo-desc
 
   // Language
   #align(bottom,
-    stack(dir: ltr, spacing: 20pt,
+    stack(dir: ltr, spacing: 10pt,
         align(horizon,
-        stack(dir: ltr, spacing: 7.5pt,
+        stack(dir: ltr, spacing: 5pt,
           circle(radius: 5pt, fill: lang-color(sys.inputs.repo-lang)),
           sys.inputs.repo-lang,
         )),
         align(horizon,
         if sys.inputs.repo-stars > 0 {
-          stack(dir: ltr, spacing: 5pt,
+          stack(dir: ltr, spacing: 3pt,
             star-icon,
             align(horizon, [#sys.inputs.repo-stars])
           )

@@ -24,7 +24,7 @@
 #let book-icon = read("assets/book.svg")
 #{ 
   book-icon = book-icon.replace("currentColor", "green")
-  book-icon = image(bytes(book-icon))
+  book-icon = scale(75%, image(bytes(book-icon)))
 }
 
 

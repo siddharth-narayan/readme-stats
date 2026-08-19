@@ -10,9 +10,7 @@
 )
 
 // Description
-#align(horizon, 
-  text(sys.inputs.repo-desc, fill: gray.darken(30%))
-)
+#text(sys.inputs.repo-desc, fill: gray.darken(30%))
 
 // Language
 #align(bottom, 

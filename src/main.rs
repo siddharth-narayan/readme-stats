@@ -1,4 +1,8 @@
-use axum::{Router, routing::get};
+use std::{collections::HashMap, env};
+
+use axum::{Router, extract::Path, routing::get};
+use reqwest::StatusCode;
+use serde::Deserialize;
 use typst::{
     Library, LibraryExt, diag::FileResult, foundations::{Bytes, Datetime, Dict, Duration, Str}, syntax::{FileId, RootedPath, Source, VirtualPath, VirtualRoot}, text::{Font, FontBook}, utils::LazyHash,
 };
@@ -8,30 +12,50 @@ use typst_kit::{
 use typst_layout::PagedDocument;
 use typst_svg::SvgOptions;
 
+#[derive(Deserialize)]
+struct GithubUser {
+    login: String
+}
+
+#[derive(Deserialize)]
+struct Repo {
+    owner: GithubUser,
+    description: Option<String>,
+    stargazers_count: usize
+}
+
 #[tokio::main]
 async fn main() {
-    let app = Router::new().route("/", get(handle_req));
-    
+    let _ = dotenv::dotenv();
+
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let app = Router::new().route("/repos/{user}/{repo}", get(handle_req));
+    
     axum::serve(listener, app).await.unwrap();
+}
 
-    let world = World::new();
+async fn handle_req(Path((username, repo_name)): Path<(String, String)>) -> Result<String, StatusCode> {
+    let client = reqwest::ClientBuilder::new().user_agent("Mozilla/5.0 (X11; Linux x86_64; rv:154.0) Gecko/20100101 Firefox/154.0").build().unwrap();
+    
+    let bearer = env::var("GITHUB_TOKEN").unwrap();
+    let repo_response = client.get(format!("https://api.github.com/repos/{username}/{repo_name}")).bearer_auth(&bearer).send().await.map_err(|_| StatusCode::from_u16(400).unwrap())?;
+    let repo_lang_response = client.get(format!("https://api.github.com/repos/{username}/{repo_name}/languages")).bearer_auth(&bearer).send().await.map_err(|_| StatusCode::from_u16(401).unwrap())?;
+    
+    let repo = repo_response.json::<Repo>().await.map_err(|e| { println!("{:#?}", e); StatusCode::from_u16(402).unwrap() })?;
+    let repo_langs = repo_lang_response.json::<HashMap<String, usize>>().await.map_err(|_| StatusCode::from_u16(403).unwrap())?;
 
+    let mut inputs = Dict::new();
+    inputs.insert(Str::from("repo-name"), typst::foundations::Value::Str(Str::from(repo_name)));
+    inputs.insert(Str::from("repo-desc"), typst::foundations::Value::Str(Str::from(repo.description.unwrap_or_default())));
+
+    let lang = repo_langs.iter().max_by(|l1, l2| { l1.1.cmp(l2.1)}).map(|f| f.0.clone()).unwrap_or_default();
+    inputs.insert(Str::from("repo-lang"), typst::foundations::Value::Str(Str::from(lang)));
+
+    let world = World::new(inputs);
     let result = typst::compile(&world);
     let document: PagedDocument = result.output.unwrap();
 
-    let out = typst_svg::svg(
-        &document.pages()[0],
-        &SvgOptions {
-            render_bleed: false,
-            pretty: true,
-        },
-    );
-    println!("{}", out)
-}
-
-async fn handle_req() -> String {
-    "Hello".into()
+    Ok(typst_svg::svg(&document.pages()[0], &SvgOptions::default()))
 }
 
 pub struct World {
@@ -42,7 +66,7 @@ pub struct World {
 }
 
 impl World {
-    pub fn new() -> World {
+    pub fn new(inputs: Dict) -> World {
         let file_store = FileStore::new(SystemFiles::new(
             FsRoot::new(".".into()),
             SystemPackages::new(SystemDownloader::new("")),
@@ -54,11 +78,6 @@ impl World {
         let mut fonts = FontStore::new();
         fonts.extend(fonts::system());
         fonts.extend(fonts::embedded());
-
-        let mut inputs = Dict::new();
-        inputs.insert(Str::from("repo-name"), typst::foundations::Value::Str(Str::from("readme-stats")));
-        inputs.insert(Str::from("repo-desc"), typst::foundations::Value::Str(Str::from("A GitHub card generator")));
-        inputs.insert(Str::from("repo-lang"), typst::foundations::Value::Str(Str::from("Rust")));
 
         World {
             lib: Library::builder().with_inputs(inputs).build().into(),

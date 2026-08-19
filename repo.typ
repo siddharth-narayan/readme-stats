@@ -3,7 +3,7 @@
 #set page(width: 300pt, height: auto, margin: 1pt, fill: color.rgb(255, 255, 255, 0))
 #set text(fill: theme.text, font: "Noto Sans")
 
-#block(width: 100%, inset: 10pt, fill: theme.background, stroke: theme.border + 1pt, radius: 5pt)[
+#block(width: 100%, inset: 12.5pt, fill: theme.background, stroke: theme.border + 1pt, radius: 5pt)[
   // Title
   #stack(dir: ltr, spacing: 5pt,
     book-icon,

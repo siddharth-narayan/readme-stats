@@ -15,3 +15,16 @@
   star-icon = star-icon.replace("currentColor", "white")
   star-icon = scale(75%, image(bytes(star-icon)))
 }
+
+#let themes = (
+  github-dark: (
+    background: rgb("#0d1117"),
+    border: rgb("#3d444d"),
+    text: rgb("#f0f6fc")
+  ),
+  github-light: (
+    background: rgb("#ffffff"),
+    border: rgb("#d1d9e0"),
+    text: rgb("#58636e")
+  )
+)

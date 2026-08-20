@@ -97,7 +97,9 @@ fn sort_langs(query_resp: QueryResponse, ignore_repos: Option<String>, ignore_la
   }
 
   let mut out: Vec<(String, f64)> = lang_bytecount.into_iter().map(|(name, count)| (name, count as f64 / total_bytes as f64)).collect();
-  out.sort_by(|l1, l2| l1.1.partial_cmp(&l2.1).unwrap_or(std::cmp::Ordering::Equal));
+  out.sort_by(|l1, l2| l2.1.partial_cmp(&l1.1).unwrap_or(std::cmp::Ordering::Equal));
+  out.truncate(6);
+  
   let map: IndexMap<Str, Value, FxBuildHasher> = IndexMap::from_iter(out.into_iter().map(|(name, frac)| (Str::from(name), Value::Ratio(Ratio::new(frac)))));
 
   Dict::from(map)

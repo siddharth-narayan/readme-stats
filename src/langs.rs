@@ -128,7 +128,7 @@ pub async fn languages(Path(username): Path<String>, Query(lang_params): Query<L
       inputs.insert(Str::from("languages"), Value::Dict(langs));
       inputs.insert(Str::from("theme"), Value::Str(Str::from(lang_params.theme.unwrap_or_default().to_str())));
 
-      let world = World::new("langs.typ", inputs);
+      let world = World::new("tiles/langs.typ", inputs);
 
       // This unwrap needs to go
       let document: PagedDocument = typst::compile(&world).output.unwrap();

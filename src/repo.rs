@@ -39,7 +39,7 @@ pub async fn repo(Path((username, repo_name)): Path<(String, String)>, Query(par
     inputs.insert(Str::from("repo-lang"), Value::Str(Str::from(repo_toplang)));
     inputs.insert(Str::from("theme"), Value::Str(Str::from(params.theme.unwrap_or_default().to_str())));
 
-    let world = World::new("repo.typ", inputs);
+    let world = World::new("tiles/repo.typ", inputs);
 
     // This unwrap needs to go
     let document: PagedDocument = typst::compile(&world).output.unwrap();

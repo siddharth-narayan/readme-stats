@@ -1,4 +1,4 @@
-#let lang-colors = json("assets/lang-colors.json")
+#let lang-colors = json("../assets/lang-colors.json")
 #let lang-color(lang) = {
   let color = lang-colors.at(lang).color
   if color == none {
@@ -26,14 +26,14 @@
 
 #let theme = themes.at(sys.inputs.theme)
 
-#let book-icon = read("assets/book.svg")
+#let book-icon = read("../assets/book.svg")
 #{ 
   book-icon = book-icon.replace("currentColor", "green")
   book-icon = scale(75%, image(bytes(book-icon)))
 }
 
 
-#let star-icon = read("assets/star.svg")
+#let star-icon = read("../assets/star.svg")
 #{
   star-icon = star-icon.replace("currentColor", theme.text.to-hex())
   star-icon = scale(75%, image(bytes(star-icon)))

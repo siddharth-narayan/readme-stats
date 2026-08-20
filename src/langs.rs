@@ -10,7 +10,14 @@ use typst::{foundations::{Dict, Str, Value}, layout::Ratio};
 use typst_layout::PagedDocument;
 use typst_svg::SvgOptions;
 
-use crate::{util::{GraphQLNodes, SharedParams}, world::World};
+use crate::{util::{GraphQLNodes, SharedParams, Theme}, world::World};
+
+#[derive(Deserialize, Default)]
+pub struct LangParams {
+    ignore_repos: Option<String>,
+    ignore_langs: Option<String>,
+    theme: Option<Theme>
+}
 
 #[derive(Deserialize, Debug)]
 struct QueryResponse {
@@ -49,7 +56,18 @@ struct LangNameNode {
   name: String
 }
 
-fn sort_langs(query_resp: QueryResponse, ignore_repos: Vec<String>, ignore_langs: Vec<String>) -> Dict {
+fn sort_langs(query_resp: QueryResponse, ignore_repos: Option<String>, ignore_langs: Option<String>) -> Dict {
+
+  let ignore_repos = match ignore_repos {
+    Some(s) => s.split(',').map(String::from).collect(),
+    None => Vec::new()
+  };
+
+  let ignore_langs = match ignore_langs {
+    Some(s) => s.clone().split(',').map(String::from).collect(),
+    None => Vec::new()
+  };
+
   let mut lang_bytecount = HashMap::new();
   let mut total_bytes = 0;
   for repo in query_resp.data.user.repositories.nodes {
@@ -86,7 +104,7 @@ fn sort_langs(query_resp: QueryResponse, ignore_repos: Vec<String>, ignore_langs
 
 }
 
-pub async fn languages(Path(username): Path<String>, Query(params): Query<SharedParams>) -> Result<(HeaderMap, String), StatusCode> {
+pub async fn languages(Path(username): Path<String>, Query(lang_params): Query<LangParams>) -> Result<(HeaderMap, String), StatusCode> {
     let client = reqwest::ClientBuilder::new().user_agent("Mozilla/5.0 (X11; Linux x86_64; rv:154.0) Gecko/20100101 Firefox/154.0").build().unwrap();
     
     let bearer = env::var("GITHUB_TOKEN").unwrap();
@@ -99,14 +117,14 @@ pub async fn languages(Path(username): Path<String>, Query(params): Query<Shared
         }
       }).to_string())
       .bearer_auth(&bearer)
-      .send().await.map_err(|_| StatusCode::from_u16(400).unwrap()).unwrap();
+      .send().await.map_err(|_| StatusCode::from_u16(418).unwrap()).unwrap();
 
       let response = repo_response.json::<QueryResponse>().await.unwrap();
-      let langs = sort_langs(response, Vec::new(), Vec::new());
+      let langs = sort_langs(response, lang_params.ignore_repos, lang_params.ignore_langs);
 
       let mut inputs = Dict::new();
       inputs.insert(Str::from("languages"), Value::Dict(langs));
-      inputs.insert(Str::from("theme"), Value::Str(Str::from(params.theme.unwrap_or_default().to_str())));
+      inputs.insert(Str::from("theme"), Value::Str(Str::from(lang_params.theme.unwrap_or_default().to_str())));
 
       let world = World::new("langs.typ", inputs);
 

@@ -6,7 +6,7 @@
 #block(width: 100%, inset: 12.5pt, fill: theme.background, stroke: theme.border + 1pt, radius: 5pt)[
   // Title
   #stack(dir: ltr, spacing: 5pt,
-    book-icon,
+    import-image("../assets/book.svg", "green"),
     align(horizon, strong(sys.inputs.repo-name)))
 
   #set text(fill: theme.text-unemph, size: 10pt)
@@ -25,7 +25,7 @@
         align(horizon,
         if sys.inputs.repo-stars > 0 {
           stack(dir: ltr, spacing: 3pt,
-            star-icon,
+            import-image("../assets/star.svg"),
             align(horizon, [#sys.inputs.repo-stars])
           )
         })

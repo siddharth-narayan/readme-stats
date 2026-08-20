@@ -26,15 +26,10 @@
 
 #let theme = themes.at(sys.inputs.theme)
 
-#let book-icon = read("../assets/book.svg")
-#{ 
-  book-icon = book-icon.replace("currentColor", "green")
-  book-icon = scale(75%, image(bytes(book-icon)))
-}
+#let import-image(path, color: theme.text.to-hex()) = {
+  let icon = read(path)
+  icon = icon.replace("currentColor", color)
+  icon = scale(75%, image(bytes(icon)))
 
-
-#let star-icon = read("../assets/star.svg")
-#{
-  star-icon = star-icon.replace("currentColor", theme.text.to-hex())
-  star-icon = scale(75%, image(bytes(star-icon)))
+  return icon
 }

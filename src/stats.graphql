@@ -1,0 +1,26 @@
+query userInfo($login: String!) {
+    user(login: $login) {
+        name
+        repositories(ownerAffiliations: OWNER, isFork: false, orderBy: {field: STARGAZERS, direction: DESC} first: 100) {
+            nodes {
+                stargazerCount
+            }
+        }
+
+        commits: contributionsCollection {
+            totalCount: totalCommitContributions,
+        }
+        
+        pullRequests(first: 1) {
+            totalCount
+        }
+
+        issues(states: [OPEN, CLOSED]) {
+            totalCount
+        }
+
+        repositoriesContributedTo(first: 1, contributionTypes: [COMMIT, ISSUE, PULL_REQUEST, REPOSITORY]) {
+            totalCount
+        }
+    }
+}

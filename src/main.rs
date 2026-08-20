@@ -1,10 +1,12 @@
 use axum::{Router, routing::{get}};
-use crate::{langs::languages, repo::repo};
+use crate::{langs::languages, repo::repo, stats::stats};
 
-mod langs;
 mod repo;
-mod world;
+mod langs;
+mod stats;
+
 mod util;
+mod world;
 
 #[tokio::main]
 async fn main() {
@@ -13,7 +15,8 @@ async fn main() {
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     let app = Router::new()
         .route("/repos/{user}/{repo}", get(repo))
-        .route("/languages/{user}", get(languages));
+        .route("/languages/{user}", get(languages))
+        .route("/stats/{user}", get(stats));
 
     axum::serve(listener, app).await.unwrap();
 }

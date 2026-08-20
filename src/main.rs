@@ -1,6 +1,6 @@
 use std::{collections::HashMap, env};
 
-use axum::{Router, extract::{Path, Query}, routing::get};
+use axum::{Router, extract::{Path, Query}, http::HeaderMap, routing::get};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use typst::foundations::{Dict, Str, Value};
@@ -55,7 +55,7 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
-async fn repo_req(Path((username, repo_name)): Path<(String, String)>, Query(params): Query<RepoParams>) -> Result<String, StatusCode> {
+async fn repo_req(Path((username, repo_name)): Path<(String, String)>, Query(params): Query<RepoParams>) -> Result<(HeaderMap, String), StatusCode> {
     let client = reqwest::ClientBuilder::new().user_agent("Mozilla/5.0 (X11; Linux x86_64; rv:154.0) Gecko/20100101 Firefox/154.0").build().unwrap();
     
     let bearer = env::var("GITHUB_TOKEN").unwrap();
@@ -78,5 +78,11 @@ async fn repo_req(Path((username, repo_name)): Path<(String, String)>, Query(par
     // This unwrap needs to go
     let document: PagedDocument = typst::compile(&world).output.unwrap();
 
-    Ok(typst_svg::svg(&document.pages()[0], &SvgOptions::default()))
+
+    let svg_text = typst_svg::svg(&document.pages()[0], &SvgOptions::default());
+
+    let mut headers = HeaderMap::new();
+    headers.insert("content-type", "image/svg+xml".parse().unwrap());
+
+    Ok((headers, svg_text))
 }

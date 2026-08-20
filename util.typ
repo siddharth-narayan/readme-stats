@@ -1,6 +1,11 @@
-#let colors = json("assets/lang-colors.json")
-#let lang-color(color) = {
-  rgb(colors.at(color).color)
+#let lang-colors = json("assets/lang-colors.json")
+#let lang-color(lang) = {
+  let color = lang-colors.at(lang).color
+  if color == none {
+    color = gray
+  }
+
+  rgb(color)
 }
 
 #let themes = (

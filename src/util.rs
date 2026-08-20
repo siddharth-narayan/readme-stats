@@ -1,4 +1,8 @@
 use serde::Deserialize;
+#[derive(Deserialize)]
+pub struct SharedParams {
+    pub theme: Option<Theme>
+}
 
 #[derive(Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
@@ -19,5 +23,5 @@ impl Theme {
 
 #[derive(Deserialize, Debug)]
 pub struct GraphQLNodes<T> {
-    nodes: Vec<T>
+    pub nodes: Vec<T>
 }

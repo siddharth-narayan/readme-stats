@@ -7,7 +7,7 @@ use typst::foundations::{Dict, Str, Value};
 use typst_layout::PagedDocument;
 use typst_svg::SvgOptions;
 
-use crate::{util::Theme, world::World};
+use crate::{util::SharedParams, world::World};
 
 #[derive(Deserialize)]
 struct GithubUser {
@@ -21,12 +21,7 @@ struct Repo {
     stargazers_count: usize
 }
 
-#[derive(Deserialize)]
-pub struct RepoParams {
-    theme: Option<Theme>
-}
-
-pub async fn repo(Path((username, repo_name)): Path<(String, String)>, Query(params): Query<RepoParams>) -> Result<(HeaderMap, String), StatusCode> {
+pub async fn repo(Path((username, repo_name)): Path<(String, String)>, Query(params): Query<SharedParams>) -> Result<(HeaderMap, String), StatusCode> {
     let client = reqwest::ClientBuilder::new().user_agent("Mozilla/5.0 (X11; Linux x86_64; rv:154.0) Gecko/20100101 Firefox/154.0").build().unwrap();
     
     let bearer = env::var("GITHUB_TOKEN").unwrap();

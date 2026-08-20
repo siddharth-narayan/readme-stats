@@ -10,13 +10,15 @@ use typst::{foundations::{Dict, Str, Value}, layout::Ratio};
 use typst_layout::PagedDocument;
 use typst_svg::SvgOptions;
 
-use crate::{util::{GraphQLNodes, SharedParams, Theme}, world::World};
+use crate::{util::{GraphQLNodes, SharedParams}, world::World};
 
-#[derive(Deserialize, Default)]
-pub struct LangParams {
+#[derive(Deserialize)]
+pub struct Params {
     ignore_repos: Option<String>,
     ignore_langs: Option<String>,
-    theme: Option<Theme>
+
+    #[serde(flatten)]
+    shared: SharedParams
 }
 
 #[derive(Deserialize, Debug)]
@@ -106,7 +108,7 @@ fn sort_langs(query_resp: QueryResponse, ignore_repos: Option<String>, ignore_la
 
 }
 
-pub async fn languages(Path(username): Path<String>, Query(lang_params): Query<LangParams>) -> Result<(HeaderMap, String), StatusCode> {
+pub async fn languages(Path(username): Path<String>, Query(lang_params): Query<Params>) -> Result<(HeaderMap, String), StatusCode> {
     let client = reqwest::ClientBuilder::new().user_agent("Mozilla/5.0 (X11; Linux x86_64; rv:154.0) Gecko/20100101 Firefox/154.0").build().unwrap();
     
     let bearer = env::var("GITHUB_TOKEN").unwrap();
@@ -126,7 +128,7 @@ pub async fn languages(Path(username): Path<String>, Query(lang_params): Query<L
 
       let mut inputs = Dict::new();
       inputs.insert(Str::from("languages"), Value::Dict(langs));
-      inputs.insert(Str::from("theme"), Value::Str(Str::from(lang_params.theme.unwrap_or_default().to_str())));
+      inputs.insert(Str::from("theme"), Value::Str(Str::from(lang_params.shared.theme.unwrap_or_default().to_str())));
 
       let world = World::new("tiles/langs.typ", inputs);
 

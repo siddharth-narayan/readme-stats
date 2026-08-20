@@ -1,4 +1,32 @@
-async fn top_lang_req(Path((username, repo_name)): Path<(String, String)>, Query(params): Query<RepoParams>) -> Result<String, StatusCode> {
+use std::{collections::HashMap, env};
+
+use axum::{extract::{Path, Query}, http::HeaderMap};
+use reqwest::StatusCode;
+use serde::Deserialize;
+use typst::foundations::{Dict, Str, Value};
+use typst_layout::PagedDocument;
+use typst_svg::SvgOptions;
+
+use crate::{util::Theme, world::World};
+
+#[derive(Deserialize)]
+struct GithubUser {
+    login: String
+}
+
+#[derive(Deserialize)]
+struct Repo {
+    owner: GithubUser,
+    description: Option<String>,
+    stargazers_count: usize
+}
+
+#[derive(Deserialize)]
+pub struct RepoParams {
+    theme: Option<Theme>
+}
+
+pub async fn repo(Path((username, repo_name)): Path<(String, String)>, Query(params): Query<RepoParams>) -> Result<(HeaderMap, String), StatusCode> {
     let client = reqwest::ClientBuilder::new().user_agent("Mozilla/5.0 (X11; Linux x86_64; rv:154.0) Gecko/20100101 Firefox/154.0").build().unwrap();
     
     let bearer = env::var("GITHUB_TOKEN").unwrap();
@@ -21,32 +49,11 @@ async fn top_lang_req(Path((username, repo_name)): Path<(String, String)>, Query
     // This unwrap needs to go
     let document: PagedDocument = typst::compile(&world).output.unwrap();
 
-    Ok(typst_svg::svg(&document.pages()[0], &SvgOptions::default()))
-}
 
-struct GraphQlQuery {
-    pub query: String,
-    pub variables: HashMap<String, Value>
-}
+    let svg_text = typst_svg::svg(&document.pages()[0], &SvgOptions::default());
 
-query: `
-      query userInfo($login: String!) {
-        user(login: $login) {
-          # fetch only owner repos & not forks
-          repositories(ownerAffiliations: OWNER, isFork: false, first: 100) {
-            nodes {
-              name
-              languages(first: 10, orderBy: {field: SIZE, direction: DESC}) {
-                edges {
-                  size
-                  node {
-                    color
-                    name
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      `
+    let mut headers = HeaderMap::new();
+    headers.insert("content-type", "image/svg+xml".parse().unwrap());
+
+    Ok((headers, svg_text))
+}

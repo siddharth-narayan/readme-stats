@@ -3,20 +3,13 @@ use std::{collections::HashMap, env};
 use axum::{extract::{Path, Query}, http::HeaderMap};
 use reqwest::StatusCode;
 use serde::Deserialize;
+use tokio::task::spawn_blocking;
 use typst::foundations::{Dict, Str, Value};
-use typst_layout::PagedDocument;
-use typst_svg::SvgOptions;
 
-use crate::{util::SharedParams, world::World};
-
-#[derive(Deserialize)]
-struct GithubUser {
-    login: String
-}
+use crate::{util::{SharedParams, compile_svg}};
 
 #[derive(Deserialize)]
 struct Repo {
-    owner: GithubUser,
     description: Option<String>,
     stargazers_count: usize
 }
@@ -39,13 +32,7 @@ pub async fn repo(Path((username, repo_name)): Path<(String, String)>, Query(par
     inputs.insert(Str::from("repo-lang"), Value::Str(Str::from(repo_toplang)));
     inputs.insert(Str::from("theme"), Value::Str(Str::from(params.theme.unwrap_or_default().to_str())));
 
-    let world = World::new("tiles/repo.typ", inputs);
-
-    // This unwrap needs to go
-    let document: PagedDocument = typst::compile(&world).output.unwrap();
-
-
-    let svg_text = typst_svg::svg(&document.pages()[0], &SvgOptions::default());
+    let svg_text = spawn_blocking(|| compile_svg("tiles/repo.typ", inputs)).await.unwrap().map_err(|_| StatusCode::BAD_REQUEST)?;
 
     let mut headers = HeaderMap::new();
     headers.insert("content-type", "image/svg+xml".parse().unwrap());

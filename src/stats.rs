@@ -1,15 +1,13 @@
-use std::{env, time::{SystemTime, UNIX_EPOCH}};
+use std::env;
 
 use axum::{extract::{Path, Query}, http::HeaderMap};
-use chrono::{DateTime, Utc};
 use reqwest::StatusCode;
 use serde::Deserialize;
 use serde_json::json;
+use tokio::task::spawn_blocking;
 use typst::{foundations::{Dict, Str, Value}};
-use typst_layout::PagedDocument;
-use typst_svg::SvgOptions;
 
-use crate::{util::{GraphQLNodes, SharedParams}, world::World};
+use crate::{util::{GraphQLNodes, SharedParams, compile_svg}};
 
 #[derive(Deserialize, Debug)]
 struct QueryResponse {
@@ -97,9 +95,6 @@ pub async fn stats(Path(username): Path<String>, Query(lang_params): Query<Param
     let client = reqwest::ClientBuilder::new().user_agent("Mozilla/5.0 (X11; Linux x86_64; rv:154.0) Gecko/20100101 Firefox/154.0").build().unwrap();
     let bearer = env::var("GITHUB_TOKEN").unwrap();
 
-    let from = DateTime::<Utc>::from(UNIX_EPOCH).to_rfc3339();
-    let to = DateTime::<Utc>::from(SystemTime::now()).to_rfc3339();
-
     let repo_response = client
       .post("https://api.github.com/graphql")
       .body(json!({
@@ -115,7 +110,6 @@ pub async fn stats(Path(username): Path<String>, Query(lang_params): Query<Param
       let stats = Stats::new(username, response);
 
       let mut inputs = Dict::new();
-
       inputs.insert(Str::from("name"), Value::Str(stats.name.into()));
       inputs.insert(Str::from("star-count"), Value::Int(stats.stars as i64));
       inputs.insert(Str::from("commits"), Value::Int(stats.commits as i64));
@@ -125,16 +119,10 @@ pub async fn stats(Path(username): Path<String>, Query(lang_params): Query<Param
 
       inputs.insert(Str::from("theme"), Value::Str(Str::from(lang_params.shared.theme.unwrap_or_default().to_str())));
 
-      let world = World::new("tiles/stats.typ", inputs);
-
-      // This unwrap needs to go
-      let document: PagedDocument = typst::compile(&world).output.unwrap();
-
-      let svg_text = typst_svg::svg(&document.pages()[0], &SvgOptions::default());
+      let svg_text = spawn_blocking(|| compile_svg("tiles/stats.typ", inputs)).await.unwrap().map_err(|_| StatusCode::BAD_REQUEST)?;
 
       let mut headers = HeaderMap::new();
       headers.insert("content-type", "image/svg+xml".parse().unwrap());
 
-      // Ok((HeaderMap::new(), String::new()))
       Ok((headers, svg_text))
 }

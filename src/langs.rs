@@ -6,11 +6,10 @@ use reqwest::StatusCode;
 use rustc_hash::FxBuildHasher;
 use serde::Deserialize;
 use serde_json::json;
+use tokio::task::spawn_blocking;
 use typst::{foundations::{Dict, Str, Value}, layout::Ratio};
-use typst_layout::PagedDocument;
-use typst_svg::SvgOptions;
 
-use crate::{util::{GraphQLNodes, SharedParams}, world::World};
+use crate::{util::{GraphQLNodes, SharedParams, compile_svg}};
 
 #[derive(Deserialize)]
 pub struct Params {
@@ -130,13 +129,7 @@ pub async fn languages(Path(username): Path<String>, Query(lang_params): Query<P
       inputs.insert(Str::from("languages"), Value::Dict(langs));
       inputs.insert(Str::from("theme"), Value::Str(Str::from(lang_params.shared.theme.unwrap_or_default().to_str())));
 
-      let world = World::new("tiles/langs.typ", inputs);
-
-      // This unwrap needs to go
-      let document: PagedDocument = typst::compile(&world).output.unwrap();
-
-
-      let svg_text = typst_svg::svg(&document.pages()[0], &SvgOptions::default());
+      let svg_text = spawn_blocking(|| compile_svg("tiles/langs.typ", inputs)).await.unwrap().map_err(|_| StatusCode::BAD_REQUEST)?;
 
       let mut headers = HeaderMap::new();
       headers.insert("content-type", "image/svg+xml".parse().unwrap());

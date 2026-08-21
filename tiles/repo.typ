@@ -6,7 +6,7 @@
 #block(width: 100%, inset: 12.5pt, fill: theme.background, stroke: theme.border + 1pt, radius: 5pt)[
   // Title
   #stack(dir: ltr, spacing: 5pt,
-    import-image("../assets/book.svg", "green"),
+    import-image("../assets/book.svg", color: "green"),
     align(horizon, strong(sys.inputs.repo-name)))
 
   #set text(fill: theme.text-unemph, size: 10pt)

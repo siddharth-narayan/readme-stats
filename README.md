@@ -1,7 +1,14 @@
 # readme-stats
 Generate beautiful tiles for your GitHub READMEs
 
-### Repositories - `/repos/<username>`
+You can also control for light/dark mode with query parameter `theme`: appending `?theme=github-light` generates a light mode colored card, and `?theme=github-dark` a dark colored one
+
+[![Readme Card](https://github-readme-stats-535890345750.us-south1.run.app/repos/siddharth-narayan/readme-stats?theme=github-light)](https://github.com/siddharth-narayan/readme-stats)
+[![Readme Card](https://github-readme-stats-535890345750.us-south1.run.app/repos/siddharth-narayan/readme-stats?theme=github-dark)](https://github.com/siddharth-narayan/readme-stats)
+
+Appending `#gh-light-mode-only` or `gh-dark-mode-only` to your image's link will allow it to appear in only light/dark mode appropriate to the user's theme. The cards in this README appears as your system theme by doing this.
+
+### Repositories - `/repos/<username>/<repo-name>`
 ```markdown
 [![Readme Card](https://github-readme-stats-535890345750.us-south1.run.app/repos/siddharth-narayan/readme-stats)](https://github.com/siddharth-narayan/personal-site)
 ```
@@ -11,15 +18,7 @@ Generates the following:
 [![Readme Card](https://github-readme-stats-535890345750.us-south1.run.app/repos/siddharth-narayan/readme-stats?theme=github-light)](https://github.com/siddharth-narayan/readme-stats#gh-light-mode-only)
 [![Readme Card](https://github-readme-stats-535890345750.us-south1.run.app/repos/siddharth-narayan/readme-stats?theme=github-dark)](https://github.com/siddharth-narayan/readme-stats#gh-dark-mode-only)
 
-
-You can also control for light/dark mode with query parameter `theme`: appending `?theme=github-light` generates a light mode colored card, and `?theme=github-dark` a dark colored one
-
-[![Readme Card](https://github-readme-stats-535890345750.us-south1.run.app/repos/siddharth-narayan/readme-stats?theme=github-light)](https://github.com/siddharth-narayan/readme-stats)
-[![Readme Card](https://github-readme-stats-535890345750.us-south1.run.app/repos/siddharth-narayan/readme-stats?theme=github-dark)](https://github.com/siddharth-narayan/readme-stats)
-
-Appending `#gh-light-mode-only` or `gh-dark-mode-only` to your image's link will allow it to appear in only light/dark mode appropriate to the user's theme. The cards in this README appears as your system theme by doing this.
-
-### Top Languages - `/repo/<user>/<repo-name>`
+### Top Languages - `/languages/<user>`
 ```markdown
 [![Readme Card](https://github-readme-stats-535890345750.us-south1.run.app/languages/siddharth-narayan)](https://github.com/siddharth-narayan/siddharth-narayan)
 ```
